@@ -1,0 +1,5 @@
+@testing_require
+
+require("kasaibox")
+local area = kasaibox.area(obj.w, obj.h)
+obj.load("text", area)
