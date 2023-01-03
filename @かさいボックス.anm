@@ -3,3 +3,9 @@
 require("kasaibox")
 local area = kasaibox.area(obj.w, obj.h)
 obj.load("text", area)
+
+@testing_scope
+
+require("kasaibox")
+local num_called = kasaibox.count_called()
+obj.load("text", num_called)
