@@ -3,7 +3,7 @@
 --track1:YŽ²(%),0,1000,100,0.01
 --track2:Šg‘å—¦,0,1000,100,0.01
 --track3:ZŽ²‰ñ“],-720,720,0,0.01
---dialog:pos,pos={0,0};help,help=""
+--dialog:pos,pos={0,0};help,help="https://github.com/streamwest-1629/kasaibox"
 
 obj.setanchor("pos", 1, "line")
 local ox = obj.ox - pos[1]
