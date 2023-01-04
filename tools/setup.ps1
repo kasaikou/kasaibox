@@ -15,5 +15,12 @@ Expand-Archive .\downloads\lua-windows.zip -DestinationPath .\downloads\lua-wind
 Move-Item -Path .\downloads\lua-windows\include\* -Destination .\libs\include -Force
 Copy-Item -Path .\downloads\lua-windows\* -Destination .\libs\lib -Recurse -Force
 
+# opencv
+Invoke-WebRequest -Uri "https://github.com/streamwest-1629/kasaibox/releases/download/artifact-release/opencv4.6.0-x86-vc17.zip" -OutFile .\downloads\opencv-windows.zip
+Expand-Archive .\downloads\opencv-windows.zip -DestinationPath .\downloads\opencv-windows -Force
+Copy-Item -Path .\downloads\opencv-windows\opencv4.7.0-x86-vc17\bin -Destination .\libs -Recurse -Force
+Copy-Item -Path .\downloads\opencv-windows\opencv4.7.0-x86-vc17\include -Destination .\libs -Recurse -Force
+Copy-Item -Path .\downloads\opencv-windows\opencv4.7.0-x86-vc17\lib -Destination .\libs -Recurse -Force
+
 Remove-Item .\downloads -Recurse
 
