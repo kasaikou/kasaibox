@@ -9,3 +9,17 @@ obj.load("text", area)
 require("kasaibox")
 local num_called = kasaibox.count_called()
 obj.load("text", num_called)
+
+@testing_dirpath
+
+require("kasaibox")
+local dlldir = kasaibox.print_dlldirpath()
+obj.load("text", dlldir)
+
+
+@testing_opencv
+
+require("kasaibox")
+data, w, h = obj.getpixeldata()
+kasaibox.opencv_binalize(data, w, h)
+obj.putpixeldata(data)
