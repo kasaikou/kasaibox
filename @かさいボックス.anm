@@ -1,3 +1,32 @@
+@ä‘äuí≤êÆ
+--track0:Xé≤(%),0,1000,100,0.01
+--track1:Yé≤(%),0,1000,100,0.01
+--track2:ägëÂó¶,0,1000,100,0.01
+--track3:Zé≤âÒì],-720,720,0,0.01
+--dialog:pos,pos={0,0};help,help=""
+
+obj.setanchor("pos", 1, "line")
+local ox = obj.ox - pos[1]
+local oy = obj.oy - pos[2]
+
+ox = ox * (obj.track0 * 0.01)
+oy = oy * (obj.track1 * 0.01)
+
+local zoom = (obj.track2 * 0.01)
+ox = ox * zoom
+oy = oy * zoom
+obj.zoom = obj.zoom * zoom
+
+local rad = math.rad(obj.rz + obj.track3)
+local cos = math.cos(rad)
+local sin = math.sin(rad)
+local res_ox = ox * cos - oy * sin
+local res_oy = ox * sin + oy * cos
+obj.rz = obj.rz + obj.track3
+
+obj.ox = res_ox + pos[1]
+obj.oy = res_oy + pos[2]
+
 @testing_require
 
 require("kasaibox")
