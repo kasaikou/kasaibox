@@ -1,0 +1,10 @@
+{
+    "[lua]": {
+        "files.encoding": "shiftjis",
+        "files.eol": "\r\n"
+    },
+    "files.encoding": "utf8",
+    "files.associations": {
+        "*.anm": "lua"
+    }
+}
