@@ -1,0 +1,38 @@
+name: Build and Package Artifacts
+on:
+  pull_request:
+  push:
+    branches:
+      - "main"
+jobs:
+  build_and_package:
+    name: Build and Package
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v1.1
+        with:
+          vs-version: "[17.4,17.5)"
+      - name: Cache Dependency artifacts
+        id: cache_dependency_artifacts
+        uses: actions/cache@v3
+        with:
+          path: libs
+          key: dependency-artifacts-${{ hashFiles('tools/setup.ps1') }}
+      - name: Download Dependency artifacts
+        if: steps.cache_dependency_artifacts.outputs.cache-hit != 'true'
+        run: ./tools/setup.ps1
+        shell: powershell
+      - name: Build
+        run: MSBuild kasaibox.vcxproj /t:build /p:Configuration=Release /p:Platform=Win32
+        shell: powershell
+      - name: Package
+        run: ./tools/package.sh
+        shell: bash
+      - name: Upload
+        uses: actions/upload-artifact@v2
+        with:
+          name: kasaibox
+          path: kasaibox
