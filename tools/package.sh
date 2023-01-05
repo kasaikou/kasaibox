@@ -11,4 +11,5 @@ cp ./libs/bin/opencv_world460.dll \
 
 cp ./Release/kasaibox.dll \
     ./@かさいボックス.anm \
+    ./README.md \
     ./kasaibox
