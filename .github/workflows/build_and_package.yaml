@@ -1,9 +1,6 @@
 name: Build and Package Artifacts
 on:
   pull_request:
-  push:
-    branches:
-      - "main"
 jobs:
   build_and_package:
     name: Build and Package
