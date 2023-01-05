@@ -38,3 +38,9 @@ struct ARGB {
 		return *this;
 	}
 };
+
+struct RectArea {
+	int top, bottom, left, right;
+	RectArea(const int& top, const int& bottom, const int& left, const int& right) :
+		top(top), bottom(bottom), left(left), right(right) {}
+};
