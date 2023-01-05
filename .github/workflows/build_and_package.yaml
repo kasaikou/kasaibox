@@ -1,10 +1,15 @@
 name: Build and Package Artifacts
 on:
   pull_request:
+  push:
+    tags:
+      - v*.*.*
 jobs:
   build_and_package:
     name: Build and Package
     runs-on: windows-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@v1
@@ -28,8 +33,24 @@ jobs:
       - name: Package
         run: ./tools/package.sh
         shell: bash
-      - name: Upload
+      - name: Upload Artifact
+        if: github.event_name == 'pull_request'
         uses: actions/upload-artifact@v2
         with:
           name: kasaibox
           path: kasaibox
+      - name: Compress Artifact
+        if: github.event_name == 'push'
+        uses: thedoctor0/zip-release@main
+        with:
+          type: zip
+          filename: kasaibox.zip
+          path: kasaibox
+      - name: Publish Release
+        if: github.event_name == 'push'
+        uses: softprops/action-gh-release@v1
+        with:
+          file: |
+            kasaibox.zip
+          prerelease: true
+          generate_release_notes: true
