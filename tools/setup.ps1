@@ -25,5 +25,10 @@ Copy-Item -Path .\downloads\opencv-windows\opencv4.7.0-x86-vc17\bin -Destination
 Copy-Item -Path .\downloads\opencv-windows\opencv4.7.0-x86-vc17\include -Destination .\libs -Recurse -Force -Verbose
 Copy-Item -Path .\downloads\opencv-windows\opencv4.7.0-x86-vc17\lib -Destination .\libs -Recurse -Force -Verbose
 
+# Real-ESRGAN
+Invoke-WebRequest -Uri "https://github.com/xinntao/Real-ESRGAN/releases/download/v0.2.3.0/realesrgan-ncnn-vulkan-20211212-windows.zip" -OutFile .\downloads\real-esrgan.zip
+Expand-Archive .\downloads\real-esrgan.zip -DestinationPath .\downloads\real-esrgan -Force
+Copy-Item -Path .\downloads\real-esrgan\models .\ -Recurse -Force -Verbose
+
 Remove-Item .\downloads -Recurse
 

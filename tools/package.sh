@@ -13,3 +13,5 @@ cp ./Release/kasaibox.dll \
     ./@かさいボックス.anm \
     ./README.md \
     ./kasaibox
+
+cp -R ./models ./kasaibox
