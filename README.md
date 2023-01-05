@@ -1,5 +1,13 @@
 # kasaibox
 
+これはAviutlで動画編集時に使用している（あるいは使用する予定の）自作スクリプトを管理するためのリポジトリです．
+
+## 導入方法
+
+Releasesから `kasaibox.zip` をダウンロードして以下のルールに従って配置してください．
+- `dependencies` フォルダ内のファイル（opencv_worldXXX.dllなど）を **aviutl.exeがあるフォルダに** 
+- それ以外の `@かさいボックス.anm`，`kasaibox.dll` を **`scripts` フォルダ以下に**
+
 ## スクリプト一覧
 
 - 間隔調整
