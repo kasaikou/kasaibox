@@ -26,7 +26,7 @@ jobs:
         run: ./tools/setup.ps1
         shell: powershell
       - name: Build
-        run: MSBuild kasaibox.sln \t:build \p:Configuration=Release \p:Platform=Win32
+        run: MSBuild kasaibox.vcxproj \t:build \p:Configuration=Release \p:Platform=Win32
         shell: powershell
       - name: Package
         run: ./tools/package.sh
