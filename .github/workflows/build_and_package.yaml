@@ -40,5 +40,5 @@ jobs:
       - name: Upload
         uses: actions/upload-artifact@v2
         with:
-          name: kasaibox.zip
+          name: kasaibox
           path: kasaibox.zip
