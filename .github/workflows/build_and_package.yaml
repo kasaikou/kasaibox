@@ -20,7 +20,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: libs
-          key: dependency-artifacts-{{ hashFiles('tools/setup.ps1') }}
+          key: dependency-artifacts-${{ hashFiles('tools/setup.ps1') }}
       - name: Download Dependency artifacts
         if: steps.cache_dependency_artifacts.outputs.cache-hit != 'true'
         run: ./tools/setup.ps1
