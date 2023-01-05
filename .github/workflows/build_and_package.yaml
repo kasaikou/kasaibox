@@ -32,9 +32,11 @@ jobs:
         run: ./tools/package.sh
         shell: bash
       - name: Compress
-        uses: montudor/action-zip@v1
+        uses: thedoctor0/zip-release@main
         with:
-          args: zip -r kasaibox.zip kasaibox
+          type: zip
+          filename: kasaibox.zip
+          path: kasaibox
       - name: Upload
         uses: actions/upload-artifact@v2
         with:
