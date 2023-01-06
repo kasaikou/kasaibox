@@ -30,6 +30,21 @@ cv::Mat color_to_cvmat(ARGB* image, const int& width, const int& height, const R
 	}
 }
 
+cv::Mat just_alpha_to_cvmat(ARGB* image, const int& width, const int& height, const RectArea& padding, const bool& monochrome) noexcept {
+	if (monochrome) {
+
+	} else {
+		cv::Mat rgb = cv::Mat::zeros(width - (padding.left + padding.right), height - (padding.top + padding.bottom), CV_8UC3);
+		for (int y_img = padding.top, h_img = height - padding.bottom, y_mat = 0; y_img < h_img; ++y_img, ++y_mat)
+			for (int x_img = padding.left, w_img = width - padding.right, x_mat = 0; x_img < w_img; ++x_img, ++x_mat) {
+				rgb.at<cv::Vec3b>(x_mat, y_mat)[0] = uchar(image[x_img + y_img * width].a);
+				rgb.at<cv::Vec3b>(x_mat, y_mat)[1] = uchar(image[x_img + y_img * width].a);
+				rgb.at<cv::Vec3b>(x_mat, y_mat)[2] = uchar(image[x_img + y_img * width].a);
+			}
+		return rgb;
+	}
+}
+
 void assign_cvmat(ARGB* image, const int& width, const int& height, cv::Mat mat) {
 	
 	switch (mat.type()) {

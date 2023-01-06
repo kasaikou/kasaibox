@@ -9,6 +9,7 @@ using ErrorMsg = std::string;
 
 cv::Mat color_to_cvmat(ARGB* image, const int& width, const int& height, const bool& monochrome = false) noexcept;
 cv::Mat color_to_cvmat(ARGB* image, const int& width, const int& height, const RectArea& padding, const bool& monochrome = false) noexcept;
+cv::Mat just_alpha_to_cvmat(ARGB* image, const int& width, const int& height, const RectArea& padding, const bool& monochrome = false) noexcept;
 void assign_cvmat(ARGB* image, const int& width, const int& height, cv::Mat mat);
 
 
