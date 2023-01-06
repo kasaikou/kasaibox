@@ -1,6 +1,6 @@
 #include "functions.h"
 
-cv::Mat to_cvmat(ARGB* image, const int& width, const int& height, const bool& monochrome = false) noexcept {
+cv::Mat color_to_cvmat(ARGB* image, const int& width, const int& height, const bool& monochrome) noexcept {
 
 	if (monochrome) {
 	} else {
@@ -15,7 +15,7 @@ cv::Mat to_cvmat(ARGB* image, const int& width, const int& height, const bool& m
 	}
 }
 
-cv::Mat to_cvmat(ARGB* image, const int& width, const int& height, const RectArea& padding, const bool& monochrome = false) noexcept {
+cv::Mat color_to_cvmat(ARGB* image, const int& width, const int& height, const RectArea& padding, const bool& monochrome) noexcept {
 	if (monochrome) {
 
 	} else {
