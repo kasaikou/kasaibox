@@ -137,6 +137,7 @@
   <ItemGroup>
     <ClCompile Include="src\lib.cpp" />
     <ClCompile Include="src\opencv_functions.cpp" />
+    <ClCompile Include="src\real_esrgan.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\functions.h" />
