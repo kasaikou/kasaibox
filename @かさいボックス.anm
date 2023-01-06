@@ -27,6 +27,59 @@ obj.rz = obj.rz + obj.track3
 obj.ox = res_ox + pos[1]
 obj.oy = res_oy + pos[2]
 
+@testing_Real-ESRGAN
+
+require("kasaibox")
+obj.setoption("drawtarget", "tempbuffer", obj.w * 4, obj.h * 4)
+
+local ox = obj.ox
+local oy = obj.oy
+local oz = obj.oz
+local rx = obj.rx
+local ry = obj.ry
+local rz = obj.rz
+local cx = obj.cx
+local cy = obj.cy
+local cz = obj.cz
+local zoom = obj.zoom
+local alpha = obj.alpha
+
+local origin_height = obj.h
+local origin_width = obj.w
+local extend_height = (origin_height * 3)
+local extend_width = (origin_width * 3)
+local extend_top = math.floor(extend_height / 2)
+local extend_bottom = extend_height - extend_top
+local extend_left = math.floor(extend_width / 2)
+local extend_right = extend_width - extend_left
+
+obj.effect("—ÌˆæŠg’£", extend_top, extend_bottom, extend_left, extend_right)
+obj.draw()
+
+obj.setoption("drawtarget", "framebuffer")
+obj.load("tempbuffer")
+
+local data, w, h = obj.getpixeldata()
+
+local msg = kasaibox.real_esrgan(data, w, h, extend_top, extend_bottom, extend_left, extend_right, "")
+if msg ~= "" then
+    -- obj.load("text", msg)
+    obj.load("text", origin_height .. ", ".. extend_top .. ", ".. extend_bottom .. ", ".. h)
+else
+    obj.putpixeldata(data)
+    obj.ox = ox * 4
+    obj.oy = oy * 4
+    obj.oz = oz * 4
+    obj.rx = rx
+    obj.ry = ry
+    obj.rz = rz
+    obj.cx = cx * 4
+    obj.cy = cy * 4
+    obj.cz = cz * 4
+    obj.zoom = zoom
+    obj.alpha = alpha
+end
+
 @testing_require
 
 require("kasaibox")
