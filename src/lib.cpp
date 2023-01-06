@@ -37,11 +37,33 @@ int lua_opencv_binalize(lua_State* L) {
 	return 1;
 }
 
+int lua_real_esrgan(lua_State* L) {
+	auto data = reinterpret_cast<ARGB*>(lua_touserdata(L, 1));
+	int w = static_cast<int>(lua_tointeger(L, 2));
+	int h = static_cast<int>(lua_tointeger(L, 3));
+	int extend_top = static_cast<int>(lua_tointeger(L, 4));
+	int extend_bottom = static_cast<int>(lua_tointeger(L, 5));
+	int extend_left = static_cast<int>(lua_tointeger(L, 6));
+	int extend_right = static_cast<int>(lua_tointeger(L, 7));
+	std::string modelname = lua_tostring(L, 8);
+	std::filesystem::path modelpath(dlldirpath);
+	modelpath.append("models");
+	modelpath.append(modelname);
+
+	auto msg = real_esrgan(
+		data, w, h,
+		RectArea(extend_top, extend_bottom, extend_left, extend_right),
+		modelpath.string());
+	lua_pushstring(L, msg.data());
+	return 1;
+}
+
 static luaL_Reg functions[] = {
 	{"area", area},
 	{"count_called", count_called},
 	{"print_dlldirpath", print_dlldirpath},
 	{"opencv_binalize", lua_opencv_binalize},
+	{"real_esrgan", lua_real_esrgan},
 	{nullptr, nullptr} };
 
 extern "C" __declspec(dllexport) int luaopen_kasaibox(lua_State * L) {
@@ -50,7 +72,6 @@ extern "C" __declspec(dllexport) int luaopen_kasaibox(lua_State * L) {
 }
 
 #include <Windows.h>
-#include <filesystem>
 
 BOOL WINAPI DllMain(HINSTANCE hInstDll, DWORD fdwReason, LPVOID lpReserved) {
 	if (fdwReason == DLL_PROCESS_ATTACH) {
