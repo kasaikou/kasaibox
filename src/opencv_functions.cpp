@@ -55,7 +55,7 @@ void assign_cvmat(ARGB* image, const int& width, const int& height, cv::Mat mat)
 }
 
 ErrorMsg opencv_binalization(ARGB* image, const int& width, const int& height, const RGB& dark, const RGB& blight, const int& mode) {		
-	cv::Mat src = to_cvmat(image, width, height), dest(width, height, CV_8UC3);
+	cv::Mat src = color_to_cvmat(image, width, height), dest(width, height, CV_8UC3);
 	cv::threshold(src, dest, 128, 255, cv::THRESH_BINARY | cv::THRESH_OTSU);
 	assign_cvmat(image, width, height, src);
 	return "";
