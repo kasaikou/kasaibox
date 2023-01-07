@@ -12,6 +12,17 @@ Copy-Item -Path .\downloads\ncnn-windows\ncnn-20221128-windows-vs2022-shared\x86
 Copy-Item -Path .\downloads\ncnn-windows\ncnn-20221128-windows-vs2022-shared\x86\include -Destination .\libs -Recurse -Force -Verbose
 Copy-Item -Path .\downloads\ncnn-windows\ncnn-20221128-windows-vs2022-shared\x86\lib -Destination .\libs -Recurse -Force -Verbose
 
+# vulkan-sdk
+Invoke-WebRequest -Uri "https://sdk.lunarg.com/sdk/download/1.2.162.1/windows/VulkanSDK-1.2.162.1-Installer.exe" -OutFile .\downloads\vulkansdk-windows.exe
+7z.exe x -odownloads\vulkansdk-windows .\downloads\vulkansdk-windows.exe
+Copy-Item -Path .\downloads\vulkansdk-windows\Include\* -Destination .\libs\include -Recurse -Force -Verbose
+Copy-Item -Path .\downloads\vulkansdk-windows\Lib32\* -Destination .\libs\lib -Recurse -Force -Verbose
+
+# vulkan-runtime
+Invoke-WebRequest "https://sdk.lunarg.com/sdk/download/1.2.162.1/windows/VulkanRT-1.2.162.1-Components.zip" -OutFile .\downloads\vulkan-runtime-windows.zip
+Expand-Archive .\downloads\vulkan-runtime-windows.zip -DestinationPath .\downloads\vulkan-runtime-windows -Force
+Copy-Item -Path .\downloads\vulkan-runtime-windows\VulkanRT-1.2.162.1-Components\x86\vulkan-1.dll .\libs\bin -Force -Verbose
+
 # lua
 Invoke-WebRequest -Uri "https://master.dl.sourceforge.net/project/luabinaries/5.1.4/Windows%20Libraries/lua5_1_4_Win32_dll8_lib.zip?viasf=1" -OutFile .\downloads\lua-windows.zip
 Expand-Archive .\downloads\lua-windows.zip -DestinationPath .\downloads\lua-windows -Force
@@ -24,6 +35,11 @@ Expand-Archive .\downloads\opencv-windows.zip -DestinationPath .\downloads\openc
 Copy-Item -Path .\downloads\opencv-windows\opencv4.7.0-x86-vc17\bin -Destination .\libs -Recurse -Force -Verbose
 Copy-Item -Path .\downloads\opencv-windows\opencv4.7.0-x86-vc17\include -Destination .\libs -Recurse -Force -Verbose
 Copy-Item -Path .\downloads\opencv-windows\opencv4.7.0-x86-vc17\lib -Destination .\libs -Recurse -Force -Verbose
+
+# Real-ESRGAN
+Invoke-WebRequest -Uri "https://github.com/xinntao/Real-ESRGAN/releases/download/v0.2.3.0/realesrgan-ncnn-vulkan-20211212-windows.zip" -OutFile .\downloads\real-esrgan.zip
+Expand-Archive .\downloads\real-esrgan.zip -DestinationPath .\downloads\real-esrgan -Force
+Copy-Item -Path .\downloads\real-esrgan\models .\ -Recurse -Force -Verbose
 
 Remove-Item .\downloads -Recurse
 
