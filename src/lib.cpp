@@ -46,6 +46,8 @@ int lua_real_esrgan(lua_State* L) {
 	int extend_left = static_cast<int>(lua_tointeger(L, 6));
 	int extend_right = static_cast<int>(lua_tointeger(L, 7));
 	std::string modelname = lua_tostring(L, 8);
+	bool x2resize = static_cast<int>(lua_tointeger(L, 9)) == 1;
+
 	std::filesystem::path modelpath(dlldirpath);
 	modelpath.append("models");
 	modelpath.append(modelname);
@@ -53,7 +55,7 @@ int lua_real_esrgan(lua_State* L) {
 	auto msg = real_esrgan(
 		data, w, h,
 		RectArea(extend_top, extend_bottom, extend_left, extend_right),
-		modelpath.string());
+		modelpath.string(), x2resize);
 	lua_pushstring(L, msg.data());
 	return 1;
 }

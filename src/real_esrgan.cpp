@@ -19,13 +19,14 @@ cv::Mat to_ocv(const ncnn::Mat& result) {
 	return cv_result8b;
 }
 
-ErrorMsg real_esrgan(ARGB* image, const int& width, const int& height, const RectArea& extend, const std::string& modelpath_noext) {
+ErrorMsg real_esrgan(ARGB* image, const int& width, const int& height, const RectArea& extend, const std::string& modelpath_noext, const bool& x2resize) {
 
-	if (width != 4 * (width - (extend.left + extend.right))) {
-		return "invalid width: extended != 4x origin";
-	}
-	else if (height != 4 * (height - (extend.top + extend.bottom))) {
-		return "invalid height: extended != 4x origin";
+	auto scale = x2resize ? 2 : 4;
+	if (width != scale * (width - (extend.left + extend.right)) || height != scale * (height - (extend.top + extend.bottom))) {
+		return "invalid size: " + std::format("{}x{} > {}x{}", 
+			(width - (extend.left + extend.right)), 
+			(height - (extend.top + extend.bottom)),
+			width, height);
 	}
 
 	auto origin_color = color_to_cvmat(image, width, height, extend);
@@ -87,17 +88,53 @@ ErrorMsg real_esrgan(ARGB* image, const int& width, const int& height, const Rec
 		image[i].b = std::byte(0);
 	}
 
-	for (int y = 0, h = min(height, min(result_color.first.rows, result_alpha.first.rows)); y < h; ++y)
-		for (int x = 0, w = min(width, min(result_color.first.cols, result_alpha.first.cols)); x < w; ++x) {
-			image[x + y * width].b = std::byte(result_color.first.at<cv::Vec3b>(y, x)[0]);
-			image[x + y * width].g = std::byte(result_color.first.at<cv::Vec3b>(y, x)[1]);
-			image[x + y * width].r = std::byte(result_color.first.at<cv::Vec3b>(y, x)[2]);
-			int alpha = 1;
-			alpha += result_alpha.first.at<cv::Vec3b>(y, x)[0];
-			alpha += result_alpha.first.at<cv::Vec3b>(y, x)[1];
-			alpha += result_alpha.first.at<cv::Vec3b>(y, x)[2];
-			image[x + y * width].a = std::byte(alpha / 3);
-		}
+	if (x2resize) {
+		for (int y = 0, h = min(height * 2, min(result_color.first.rows, result_alpha.first.rows)); y < h; y += 2)
+			for (int x = 0, w = min(width * 2, min(result_color.first.cols, result_alpha.first.cols)); x < w; x += 2) {
+				int b = result_color.first.at<cv::Vec3b>(y, x)[0] +
+					result_color.first.at<cv::Vec3b>(y + 1, x)[0] +
+					result_color.first.at<cv::Vec3b>(y, x + 1)[0] +
+					result_color.first.at<cv::Vec3b>(y + 1, x + 1)[0];
+				int g = result_color.first.at<cv::Vec3b>(y, x)[1] +
+					result_color.first.at<cv::Vec3b>(y + 1, x)[1] +
+					result_color.first.at<cv::Vec3b>(y, x + 1)[1] +
+					result_color.first.at<cv::Vec3b>(y + 1, x + 1)[1];
+				int r = result_color.first.at<cv::Vec3b>(y, x)[2] +
+					result_color.first.at<cv::Vec3b>(y + 1, x)[2] +
+					result_color.first.at<cv::Vec3b>(y, x + 1)[2] +
+					result_color.first.at<cv::Vec3b>(y + 1, x + 1)[2];
+				int a = 0;
+				a += result_alpha.first.at<cv::Vec3b>(y, x)[0];
+				a += result_alpha.first.at<cv::Vec3b>(y, x)[1];
+				a += result_alpha.first.at<cv::Vec3b>(y, x)[2];
+				a += result_alpha.first.at<cv::Vec3b>(y+1, x)[0];
+				a += result_alpha.first.at<cv::Vec3b>(y+1, x)[1];
+				a += result_alpha.first.at<cv::Vec3b>(y+1, x)[2];
+				a += result_alpha.first.at<cv::Vec3b>(y, x+1)[0];
+				a += result_alpha.first.at<cv::Vec3b>(y, x+1)[1];
+				a += result_alpha.first.at<cv::Vec3b>(y, x+1)[2];
+				a += result_alpha.first.at<cv::Vec3b>(y+1, x+1)[0];
+				a += result_alpha.first.at<cv::Vec3b>(y+1, x+1)[1];
+				a += result_alpha.first.at<cv::Vec3b>(y+1, x+1)[2];
+
+				image[(x / 2) + (y / 2) * width].b = std::byte(b / 4);
+				image[(x / 2) + (y / 2) * width].g = std::byte(g / 4);
+				image[(x / 2) + (y / 2) * width].r = std::byte(r / 4);
+				image[(x / 2) + (y / 2) * width].a = std::byte(a / 12);
+			}
+	} else {
+		for (int y = 0, h = min(height, min(result_color.first.rows, result_alpha.first.rows)); y < h; ++y)
+			for (int x = 0, w = min(width, min(result_color.first.cols, result_alpha.first.cols)); x < w; ++x) {
+				image[x + y * width].b = std::byte(result_color.first.at<cv::Vec3b>(y, x)[0]);
+				image[x + y * width].g = std::byte(result_color.first.at<cv::Vec3b>(y, x)[1]);
+				image[x + y * width].r = std::byte(result_color.first.at<cv::Vec3b>(y, x)[2]);
+				int alpha = 1;
+				alpha += result_alpha.first.at<cv::Vec3b>(y, x)[0];
+				alpha += result_alpha.first.at<cv::Vec3b>(y, x)[1];
+				alpha += result_alpha.first.at<cv::Vec3b>(y, x)[2];
+				image[x + y * width].a = std::byte(alpha / 3);
+			}
+	}
 
 	return "";
 }
