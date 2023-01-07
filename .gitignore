@@ -3,3 +3,4 @@ libs
 *.vcxproj.user
 Release
 /packages
+models/*
