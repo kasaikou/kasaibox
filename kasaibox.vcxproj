@@ -83,7 +83,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)libs\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>$(SolutionDir)libs\lib\lua51.lib;$(SolutionDir)libs\lib\ncnn.lib;$(SolutionDir)libs\lib\opencv_world460.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(SolutionDir)libs\lib\lua51.lib;$(SolutionDir)libs\lib\ncnn.lib;$(SolutionDir)libs\lib\vulkan-1.lib;$(SolutionDir)libs\lib\opencv_world460.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -103,7 +103,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)libs\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>$(SolutionDir)libs\lib\lua51.lib;$(SolutionDir)libs\lib\ncnn.lib;$(SolutionDir)libs\lib\opencv_world460.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(SolutionDir)libs\lib\lua51.lib;$(SolutionDir)libs\lib\ncnn.lib;$(SolutionDir)libs\lib\vulkan-1.lib;$(SolutionDir)libs\lib\opencv_world460.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -135,6 +135,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\error.cpp" />
     <ClCompile Include="src\lib.cpp" />
     <ClCompile Include="src\opencv_functions.cpp" />
     <ClCompile Include="src\real_esrgan.cpp" />
@@ -142,6 +143,7 @@
   <ItemGroup>
     <ClInclude Include="src\functions.h" />
     <ClInclude Include="src\lib.h" />
+    <ClInclude Include="src\ncnn.h" />
     <ClInclude Include="src\type.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
