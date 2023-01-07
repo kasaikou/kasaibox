@@ -18,6 +18,11 @@ Invoke-WebRequest -Uri "https://sdk.lunarg.com/sdk/download/1.2.162.1/windows/Vu
 Copy-Item -Path .\downloads\vulkansdk-windows\Include\* -Destination .\libs\include -Recurse -Force -Verbose
 Copy-Item -Path .\downloads\vulkansdk-windows\Lib32\* -Destination .\libs\lib -Recurse -Force -Verbose
 
+# vulkan-runtime
+Invoke-WebRequest "https://sdk.lunarg.com/sdk/download/1.2.162.1/windows/VulkanRT-1.2.162.1-Components.zip" -OutFile .\downloads\vulkan-runtime-windows.zip
+Expand-Archive .\downloads\vulkan-runtime-windows.zip -DestinationPath .\downloads\vulkan-runtime-windows -Force
+Copy-Item -Path .\downloads\vulkan-runtime-windows\VulkanRT-1.2.162.1-Components\x86\vulkan-1.dll .\libs\bin -Force -Verbose
+
 # lua
 Invoke-WebRequest -Uri "https://master.dl.sourceforge.net/project/luabinaries/5.1.4/Windows%20Libraries/lua5_1_4_Win32_dll8_lib.zip?viasf=1" -OutFile .\downloads\lua-windows.zip
 Expand-Archive .\downloads\lua-windows.zip -DestinationPath .\downloads\lua-windows -Force
