@@ -28,6 +28,7 @@ obj.ox = res_ox + pos[1]
 obj.oy = res_oy + pos[2]
 
 @testing_Real-ESRGAN
+--dialog:Žg—pƒ‚ƒfƒ‹,modelname="RealESRGANv2-animevideo-xsx4";
 
 require("kasaibox")
 obj.setoption("drawtarget", "tempbuffer", obj.w * 4, obj.h * 4)
@@ -61,10 +62,9 @@ obj.load("tempbuffer")
 
 local data, w, h = obj.getpixeldata()
 
-local msg = kasaibox.real_esrgan(data, w, h, extend_top, extend_bottom, extend_left, extend_right, "")
+local msg = kasaibox.real_esrgan(data, w, h, extend_top, extend_bottom, extend_left, extend_right, modelname)
 if msg ~= "" then
-    -- obj.load("text", msg)
-    obj.load("text", origin_height .. ", ".. extend_top .. ", ".. extend_bottom .. ", ".. h)
+    obj.load("text", msg)
 else
     obj.putpixeldata(data)
     obj.ox = ox * 4
