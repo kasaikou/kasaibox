@@ -28,11 +28,12 @@ obj.ox = res_ox + pos[1]
 obj.oy = res_oy + pos[2]
 
 @testing_Real-ESRGAN
+--track0:scale,1,4,2,0.01
 --dialog:使用モデル,modelname="RealESRGANv2-animevideo-xsx4";
 
 require("kasaibox")
-obj.setoption("drawtarget", "tempbuffer", obj.w * 4, obj.h * 4)
 
+local scale = obj.track0
 local ox = obj.ox
 local oy = obj.oy
 local oz = obj.oz
@@ -47,14 +48,25 @@ local alpha = obj.alpha
 
 local origin_height = obj.h
 local origin_width = obj.w
-local extend_height = (origin_height * 3)
-local extend_width = (origin_width * 3)
+
+local x2resize = 1
+local extend_height = origin_height
+local extend_width = origin_width
+if scale > 2 then
+    x2resize = 0
+    obj.setoption("drawtarget", "tempbuffer", obj.w * 4, obj.h * 4)
+    extend_height = (origin_height * 3)
+    extend_width = (origin_width * 3)
+else
+    obj.setoption("drawtarget", "tempbuffer", obj.w * 2, obj.h * 2)
+end
+
 local extend_top = math.floor(extend_height / 2)
 local extend_bottom = extend_height - extend_top
 local extend_left = math.floor(extend_width / 2)
 local extend_right = extend_width - extend_left
 
-obj.effect("領域拡張", extend_top, extend_bottom, extend_left, extend_right)
+obj.effect("領域拡張", "上", extend_top, "下", extend_bottom, "左", extend_left, "右", extend_right)
 obj.draw()
 
 obj.setoption("drawtarget", "framebuffer")
@@ -62,20 +74,25 @@ obj.load("tempbuffer")
 
 local data, w, h = obj.getpixeldata()
 
-local msg = kasaibox.real_esrgan(data, w, h, extend_top, extend_bottom, extend_left, extend_right, modelname)
+local msg = kasaibox.real_esrgan(data, w, h, extend_top, extend_bottom, extend_left, extend_right, modelname, x2resize)
 if msg ~= "" then
     obj.load("text", msg)
 else
     obj.putpixeldata(data)
-    obj.ox = ox * 4
-    obj.oy = oy * 4
-    obj.oz = oz * 4
+    if scale > 2 then
+        obj.effect("リサイズ", "拡大率", (scale / 4) * 100)
+    else
+        obj.effect("リサイズ", "拡大率", (scale / 2) * 100)
+    end
+    obj.ox = ox * scale
+    obj.oy = oy * scale
+    obj.oz = oz * scale
     obj.rx = rx
     obj.ry = ry
     obj.rz = rz
-    obj.cx = cx * 4
-    obj.cy = cy * 4
-    obj.cz = cz * 4
+    obj.cx = cx * scale
+    obj.cy = cy * scale
+    obj.cz = cz * scale
     obj.zoom = zoom
     obj.alpha = alpha
 end
