@@ -2,6 +2,8 @@
 
 #include "type.h"
 #include <string>
+#include <cstdio>
+#include <format>
 #include <map>
 #include <memory>
 #include <opencv2/core/core.hpp>

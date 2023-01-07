@@ -1,18 +1,18 @@
 #include "functions.h"
 #include "ncnn.h"
 
-std::pair<cv::Mat, ErrorMsg> inference(const cv::Mat image, const ncnn::Net& model);
+std::pair<cv::Mat, ErrorMsg> inference(const cv::Mat image, const ncnn::Net* model);
 
 cv::Mat to_ocv(const ncnn::Mat& result) {
 
-	cv::Mat cv_result32f = cv::Mat::zeros(result.w, result.h, CV_32FC3);
+	cv::Mat cv_result32f = cv::Mat::zeros(result.h, result.w, CV_32FC3);
 	cv::Mat cv_result8b;
 
 	for (int y = 0; y < result.h; ++y)
 		for (int x = 0; x < result.w; ++x) {
-			cv_result32f.at<cv::Vec3f>(x, y)[0] = result.channel(2)[x + result.w * y];
-			cv_result32f.at<cv::Vec3f>(x, y)[1] = result.channel(1)[x + result.w * y];
-			cv_result32f.at<cv::Vec3f>(x, y)[2] = result.channel(0)[x + result.w * y];
+			cv_result32f.at<cv::Vec3f>(y, x)[0] = result.channel(2)[x + result.w * y];
+			cv_result32f.at<cv::Vec3f>(y, x)[1] = result.channel(1)[x + result.w * y];
+			cv_result32f.at<cv::Vec3f>(y, x)[2] = result.channel(0)[x + result.w * y];
 		}
 
 	cv_result32f.convertTo(cv_result8b, CV_8UC3, 255.0, 0.0);
@@ -39,12 +39,27 @@ ErrorMsg real_esrgan(ARGB* image, const int& width, const int& height, const Rec
 	}
 	else {
 		net = std::make_shared<ncnn::Net>();
-		auto res = net->load_param((modelpath_noext + ".param").c_str());
+		FILE* fp;
+		std::string path;
+		
+		path = (modelpath_noext + ".param");
+		fopen_s(&fp, path.c_str(), "r");
+		if (fp == nullptr) {
+			return ".param file not exist";
+		}
+		fclose(fp);
+		auto res = net->load_param(path.c_str());
 		if (res < 0) {
 			return "open .param file failed";
 		}
 
-		res = net->load_model((modelpath_noext + ".bin").c_str());
+		path = (modelpath_noext + ".bin");
+		fopen_s(&fp, path.c_str(), "r");
+		if (fp == nullptr) {
+			return ".bin file not exist";
+		}
+		fclose(fp);
+		res = net->load_model(path.c_str());
 		if (res < 0) {
 			return "open .bin file failed";
 		}
@@ -56,11 +71,11 @@ ErrorMsg real_esrgan(ARGB* image, const int& width, const int& height, const Rec
 	}
 
 	// inference
-	auto result_color = inference(origin_color, *net.get());
+	auto result_color = inference(origin_color, net.get());
 	if (result_color.second != "") {
 		return result_color.second;
 	}
-	auto result_alpha = inference(origin_alpha, *net.get());
+	auto result_alpha = inference(origin_alpha, net.get());
 	if (result_color.second != "") {
 		return result_color.second;
 	}
@@ -74,22 +89,22 @@ ErrorMsg real_esrgan(ARGB* image, const int& width, const int& height, const Rec
 
 	for (int y = 0, h = min(height, min(result_color.first.rows, result_alpha.first.rows)); y < h; ++y)
 		for (int x = 0, w = min(width, min(result_color.first.cols, result_alpha.first.cols)); x < w; ++x) {
-			image[x + y * width].b = std::byte(result_color.first.at<cv::Vec3b>(x, y)[0]);
-			image[x + y * width].g = std::byte(result_color.first.at<cv::Vec3b>(x, y)[1]);
-			image[x + y * width].r = std::byte(result_color.first.at<cv::Vec3b>(x, y)[2]);
+			image[x + y * width].b = std::byte(result_color.first.at<cv::Vec3b>(y, x)[0]);
+			image[x + y * width].g = std::byte(result_color.first.at<cv::Vec3b>(y, x)[1]);
+			image[x + y * width].r = std::byte(result_color.first.at<cv::Vec3b>(y, x)[2]);
 			int alpha = 1;
-			alpha += result_alpha.first.at<cv::Vec3b>(x, y)[0];
-			alpha += result_alpha.first.at<cv::Vec3b>(x, y)[1];
-			alpha += result_alpha.first.at<cv::Vec3b>(x, y)[2];
+			alpha += result_alpha.first.at<cv::Vec3b>(y, x)[0];
+			alpha += result_alpha.first.at<cv::Vec3b>(y, x)[1];
+			alpha += result_alpha.first.at<cv::Vec3b>(y, x)[2];
 			image[x + y * width].a = std::byte(alpha / 3);
 		}
 
 	return "";
 }
 
-std::pair<cv::Mat, ErrorMsg> inference(const cv::Mat image, const ncnn::Net& model) {
+std::pair<cv::Mat, ErrorMsg> inference(const cv::Mat image, const ncnn::Net* model) {
 	
-	const int tile_size = 200;
+	const int tile_size = 400;
 	const int tile_padding = 10;
 	const int scale = 4;
 
@@ -99,7 +114,7 @@ std::pair<cv::Mat, ErrorMsg> inference(const cv::Mat image, const ncnn::Net& mod
 	int padding_image_w = image.cols % 2, padding_image_h = image.rows % 2;
 	cv::copyMakeBorder(image, padding_image, 0, padding_image_w, 0, padding_image_h, cv::BORDER_CONSTANT, cv::Scalar(0));
 
-	cv::Mat result(padding_image.cols * scale, padding_image.rows * scale, CV_8UC3);
+	cv::Mat result(padding_image.rows * scale, padding_image.cols * scale, CV_8UC3);
 
 	// tile-splitted compute
 	for (int y_tile = 0, h_tile = std::ceil((float)padding_image.rows / tile_size); y_tile < h_tile; ++y_tile)
@@ -113,9 +128,9 @@ std::pair<cv::Mat, ErrorMsg> inference(const cv::Mat image, const ncnn::Net& mod
 
 			// input-padding rect area
 			int input_top_padding = max(input_top - tile_padding, 0);
-			int input_bottom_padding = min(input_bottom - tile_padding, padding_image.rows);
+			int input_bottom_padding = min(input_bottom + tile_padding, padding_image.rows);
 			int input_left_padding = max(input_left - tile_padding, 0);
-			int input_right_padding = min(input_bottom - tile_padding, padding_image.cols);
+			int input_right_padding = min(input_right + tile_padding, padding_image.cols);
 
 			int input_tile_w = input_right - input_left;
 			int input_tile_h = input_bottom - input_top;
@@ -129,13 +144,16 @@ std::pair<cv::Mat, ErrorMsg> inference(const cv::Mat image, const ncnn::Net& mod
 			ncnn::Mat ncnn_in = ncnn::Mat::from_pixels(input_tile.data, ncnn::Mat::PIXEL_BGR2RGB, input_tile_padding_w, input_tile_padding_h);
 			ncnn::Mat ncnn_out;
 			ncnn_in.substract_mean_normalize(0, norm_vals);
-			ncnn::Extractor extractor = model.create_extractor();
-			extractor.input("input", ncnn_in);
+			ncnn::Extractor extractor = model->create_extractor();
+			if (extractor.input("data", ncnn_in) != 0) {
+				return std::make_pair(result, "failed set input tile");
+			}
 			extractor.extract("output", ncnn_out);
 
 			cv::Mat output_tile = to_ocv(ncnn_out);
 			if (output_tile.cols != input_tile.cols * scale || output_tile.rows != input_tile.rows * scale) {
-				return std::make_pair(result, "result scale is not x4 scale");
+				return std::make_pair(result, "result scale is not x4 scale: " + 
+					std::format("{}x{} > {}x{}", input_tile.cols, input_tile.rows, output_tile.cols, output_tile.rows));
 			}
 
 			// output rect area
