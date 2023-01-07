@@ -74,6 +74,7 @@ extern "C" __declspec(dllexport) int luaopen_kasaibox(lua_State * L) {
 }
 
 #include <Windows.h>
+#include "ncnn/gpu.h"
 
 BOOL WINAPI DllMain(HINSTANCE hInstDll, DWORD fdwReason, LPVOID lpReserved) {
 	if (fdwReason == DLL_PROCESS_ATTACH) {
@@ -82,6 +83,10 @@ BOOL WINAPI DllMain(HINSTANCE hInstDll, DWORD fdwReason, LPVOID lpReserved) {
 		std::filesystem::path p(dllpath);
 		dlldirpath = p.parent_path().string();
 		SetDllDirectory(dlldirpath.data());
+		ncnn::create_gpu_instance();
+	}
+	else if (fdwReason == DLL_PROCESS_DETACH) {
+		ncnn::destroy_gpu_instance();
 	}
 
 	return TRUE;
