@@ -1,4 +1,5 @@
 #include "functions.h"
+#include "ncnn.h"
 
 std::pair<cv::Mat, ErrorMsg> inference(const cv::Mat image, const ncnn::Net& model);
 
