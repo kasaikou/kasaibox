@@ -12,6 +12,12 @@ Copy-Item -Path .\downloads\ncnn-windows\ncnn-20221128-windows-vs2022-shared\x86
 Copy-Item -Path .\downloads\ncnn-windows\ncnn-20221128-windows-vs2022-shared\x86\include -Destination .\libs -Recurse -Force -Verbose
 Copy-Item -Path .\downloads\ncnn-windows\ncnn-20221128-windows-vs2022-shared\x86\lib -Destination .\libs -Recurse -Force -Verbose
 
+# vulkan-sdk
+Invoke-WebRequest -Uri "https://sdk.lunarg.com/sdk/download/1.2.162.1/windows/VulkanSDK-1.2.162.1-Installer.exe" -OutFile .\downloads\vulkansdk-windows.exe
+7z.exe x -odownloads\vulkansdk-windows .\downloads\vulkansdk-windows.exe
+Copy-Item -Path .\downloads\vulkansdk-windows\Include\* -Destination .\libs\include -Recurse -Force -Verbose
+Copy-Item -Path .\downloads\vulkansdk-windows\Lib32\* -Destination .\libs\lib -Recurse -Force -Verbose
+
 # lua
 Invoke-WebRequest -Uri "https://master.dl.sourceforge.net/project/luabinaries/5.1.4/Windows%20Libraries/lua5_1_4_Win32_dll8_lib.zip?viasf=1" -OutFile .\downloads\lua-windows.zip
 Expand-Archive .\downloads\lua-windows.zip -DestinationPath .\downloads\lua-windows -Force
