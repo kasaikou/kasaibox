@@ -1,0 +1,47 @@
+@音声同期
+--track0:最大音量,0,6000,6000,1
+--track1:最小音量,0,6000,1500,1
+--track2:番号,0,15,0,1
+--track3:表示,0,1,1,1
+--dialig:help,help="https://github.com/streamwest-1629/kasaibox";
+
+if K_SOUND_Sync == nil then
+    K_SOUND_Sync = {}
+end
+
+local buf = {300}
+
+obj.getaudio(buf, "audiobuffer","spectrum", 1)
+local maximum = obj.track0
+local minimum = math.min(obj.track0, obj.track1)
+K_SOUND_Sync[obj.track2..""] = math.min(1, math.max(0, buf[1] - minimum) / (maximum - minimum))
+
+if obj.track3 == 1 then 
+    local size = 500
+    
+    local color = 0x0000ff
+    if buf[1] > maximum then
+        color = 0xff0000
+    elseif buf[1] > (maximum + minimum) / 2 then
+        color = 0xffff00
+    elseif buf[1] > minimum then
+        color = 0x00ff00
+    end
+
+    obj.load("figure", "四角形", 0xffffff, (minimum + K_SOUND_Sync[obj.track2..""] * (maximum - minimum)) / 20, 3)
+    obj.draw(0, 0, 0, 1, 1, 0, 0, 45)
+    obj.load("figure", "四角形", 0x0000ff, minimum / 20, 1)
+    obj.draw(0, 0, 0, 1, 1, 0, 0, 45)
+    obj.load("figure", "四角形", 0xffff00, (minimum + maximum) / 40, 1)
+    obj.draw(0, 0, 0, 1, 1, 0, 0, 45)
+    obj.load("figure", "四角形", 0xff0000, maximum / 20, 1)
+    obj.draw(0, 0, 0, 1, 1, 0, 0, 45)
+
+    obj.load("figure", "四角形", color, buf[1] / 20)
+    obj.draw(0, 0, 0, 1, 0.3, 0, 0, 45)
+
+    obj.setfont("Arial", 30, 0, color)
+    obj.load("text", "No. "..obj.track2.."\nvol: "..buf[1])
+    obj.draw(-200, -200)
+end
+
