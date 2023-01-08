@@ -5,6 +5,8 @@
     },
     "files.encoding": "utf8",
     "files.associations": {
-        "*.anm": "lua"
+        "*.anm": "lua",
+        "*.tra": "lua",
+        "*.obj": "lua"
     }
 }
