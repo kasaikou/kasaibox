@@ -6,6 +6,8 @@
 #include <format>
 #include <map>
 #include <memory>
+#include <fstream>
+#include <mutex>
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
@@ -21,3 +23,4 @@ void assign_cvmat(ARGB* image, const int& width, const int& height, cv::Mat mat)
 
 ErrorMsg opencv_binalization(ARGB* image, const int& width, const int& height, const RGB& dark, const RGB& blight, const int& mode);
 ErrorMsg real_esrgan(ARGB* image, const int& width, const int& height, const RectArea& extend, const std::string& modelpath_noext, const bool& x2resize);
+void delete_models();

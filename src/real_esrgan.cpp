@@ -1,7 +1,18 @@
 #include "functions.h"
 #include "ncnn.h"
 
+std::mutex lock_models;
 std::pair<cv::Mat, ErrorMsg> inference(const cv::Mat image, const ncnn::Net* model);
+std::map<std::string, ncnn::Net*> models = {};
+
+void delete_models() {
+
+	std::lock_guard<std::mutex> guard_model(lock_models);
+	for (auto itr = models.begin(); itr != models.end(); ++itr) {
+		delete itr->second;
+	}
+	models.clear();
+}
 
 cv::Mat to_ocv(const ncnn::Mat& result) {
 
@@ -21,6 +32,7 @@ cv::Mat to_ocv(const ncnn::Mat& result) {
 
 ErrorMsg real_esrgan(ARGB* image, const int& width, const int& height, const RectArea& extend, const std::string& modelpath_noext, const bool& x2resize) {
 
+	std::lock_guard<std::mutex> guard_model(lock_models);
 	auto scale = x2resize ? 2 : 4;
 	if (width != scale * (width - (extend.left + extend.right)) || height != scale * (height - (extend.top + extend.bottom))) {
 		return "invalid size: " + std::format("{}x{} > {}x{}", 
@@ -33,13 +45,22 @@ ErrorMsg real_esrgan(ARGB* image, const int& width, const int& height, const Rec
 	auto origin_alpha = just_alpha_to_cvmat(image, width, height, extend);
 
 	// load model
-	static std::map<std::string, std::shared_ptr<ncnn::Net>> models = {};
-	std::shared_ptr<ncnn::Net> net;
+	ncnn::Net *net;
 	if (models.contains(modelpath_noext)) {
 		net = models[modelpath_noext];
 	}
 	else {
-		net = std::make_shared<ncnn::Net>();
+		// load model
+
+		net = new ncnn::Net;
+		net->opt.use_vulkan_compute = true;
+		net->set_vulkan_device(ncnn::get_default_gpu_index());
+		net->opt.use_fp16_packed = false;
+		net->opt.use_fp16_storage = false;
+		net->opt.use_fp16_arithmetic = false;
+		net->opt.use_int8_storage = false;
+		net->opt.use_int8_arithmetic = false;
+
 		FILE* fp;
 		std::string path;
 		
@@ -65,18 +86,15 @@ ErrorMsg real_esrgan(ARGB* image, const int& width, const int& height, const Rec
 			return "open .bin file failed";
 		}
 
-		net->opt.use_vulkan_compute = false;
-		net->opt.num_threads = 4;
-
 		models.insert(std::make_pair(modelpath_noext, net));
 	}
 
 	// inference
-	auto result_color = inference(origin_color, net.get());
+	auto result_color = inference(origin_color, net);
 	if (result_color.second != "") {
 		return result_color.second;
 	}
-	auto result_alpha = inference(origin_alpha, net.get());
+	auto result_alpha = inference(origin_alpha, net);
 	if (result_color.second != "") {
 		return result_color.second;
 	}
@@ -141,9 +159,24 @@ ErrorMsg real_esrgan(ARGB* image, const int& width, const int& height, const Rec
 
 std::pair<cv::Mat, ErrorMsg> inference(const cv::Mat image, const ncnn::Net* model) {
 	
-	const int tile_size = 400;
+	int tile_size = 32;
+	int heap_budget = model->vulkan_device()->get_heap_budget();
+	if (heap_budget > 1900) tile_size = 200;
+	else if (heap_budget > 550) tile_size = 100;
+	else if (heap_budget > 190) tile_size = 64;
+
 	const int tile_padding = 10;
 	const int scale = 4;
+	const int channel = 3;
+	int in_out_tile_elemsize = model->opt.use_fp16_storage ? 2u : 4u;
+
+	// set ncnn vulkan allocator
+	ncnn::VkAllocator* blob_vkallocator = model->vulkan_device()->acquire_blob_allocator();
+	ncnn::VkAllocator* staging_vkallocator = model->vulkan_device()->acquire_staging_allocator();
+	ncnn::Option opt = model->opt;
+	opt.blob_vkallocator = blob_vkallocator;
+	opt.workspace_vkallocator = blob_vkallocator;
+	opt.staging_vkallocator = staging_vkallocator;
 
 	cv::Mat padding_image;
 
@@ -176,22 +209,55 @@ std::pair<cv::Mat, ErrorMsg> inference(const cv::Mat image, const ncnn::Net* mod
 
 			cv::Mat input_tile = padding_image(cv::Rect(input_left_padding, input_top_padding, input_tile_padding_w, input_tile_padding_h)).clone();
 
-			// inference
-			const float norm_vals[3] = { 1.0 / 255.0, 1.0 / 255.0 , 1.0 / 255.0 };
+			// vulkan compute
+			ncnn::VkCompute cmd(model->vulkan_device());
+
+			// upload input to gpu
+			const float norm_vals[channel] = { 1.0 / 255.0, 1.0 / 255.0 , 1.0 / 255.0 };
 			ncnn::Mat ncnn_in = ncnn::Mat::from_pixels(input_tile.data, ncnn::Mat::PIXEL_BGR2RGB, input_tile_padding_w, input_tile_padding_h);
-			ncnn::Mat ncnn_out;
 			ncnn_in.substract_mean_normalize(0, norm_vals);
+			ncnn::VkMat ncnn_in_gpu;
+			ncnn_in_gpu.create(input_tile_w, input_tile_h, channel, size_t(in_out_tile_elemsize), 1, blob_vkallocator);
+			cmd.record_clone(ncnn_in, ncnn_in_gpu, opt);
+			cmd.submit_and_wait();
+			cmd.reset();
+
+			// allocate gpu memory for out
+			ncnn::VkMat ncnn_out_gpu;
+			ncnn_out_gpu.create(input_tile_w * scale, input_tile_h * scale, channel, (size_t)4u, 1, blob_vkallocator);
+
+			// inference
 			ncnn::Extractor extractor = model->create_extractor();
+			extractor.set_blob_vkallocator(blob_vkallocator);
+			extractor.set_workspace_vkallocator(blob_vkallocator);
+			extractor.set_staging_vkallocator(staging_vkallocator);
 			if (extractor.input("data", ncnn_in) != 0) {
 				return std::make_pair(result, "failed set input tile");
 			}
-			extractor.extract("output", ncnn_out);
+			extractor.extract("output", ncnn_out_gpu, cmd);
+			if (cmd.submit_and_wait() != 0) {
+				return std::make_pair(result, "failed extract with model");
+			}
+			cmd.reset();
+
+			// download output from gpu
+			ncnn::Mat ncnn_out = ncnn::Mat(ncnn_out_gpu.w, ncnn_out_gpu.h, channel, 4);
+			cmd.record_clone(ncnn_out_gpu, ncnn_out, opt);
+			if (cmd.submit_and_wait() != 0) {
+				return std::make_pair(result, "failed download data from gpu");
+			}
+			else if (ncnn_out.w != input_tile.cols * scale || ncnn_out.h != input_tile.rows * scale) {
+				return std::make_pair(result, "result scale is not x4 scale: " +
+					std::format("{}x{} > {}x{}", input_tile.cols, input_tile.rows, ncnn_out.w, ncnn_out.h));
+			}
+			else if (ncnn_out.elemsize != 4) {
+				return std::make_pair(result, std::format("unexpected elemsize of ncnn output: {}", ncnn_out.elemsize));
+			}
+			else if (ncnn_out.data == nullptr) {
+				return std::make_pair(result, std::format("ncnn output's data member is null"));
+			}
 
 			cv::Mat output_tile = to_ocv(ncnn_out);
-			if (output_tile.cols != input_tile.cols * scale || output_tile.rows != input_tile.rows * scale) {
-				return std::make_pair(result, "result scale is not x4 scale: " + 
-					std::format("{}x{} > {}x{}", input_tile.cols, input_tile.rows, output_tile.cols, output_tile.rows));
-			}
 
 			// output rect area
 			int output_top = input_top * scale;
@@ -215,5 +281,7 @@ std::pair<cv::Mat, ErrorMsg> inference(const cv::Mat image, const ncnn::Net* mod
 			output_tile(tile_rect).copyTo(result(out_rect));
 		}
 
+	model->vulkan_device()->reclaim_blob_allocator(blob_vkallocator);
+	model->vulkan_device()->reclaim_staging_allocator(staging_vkallocator);
 	return std::make_pair(result, no_error);
 }
