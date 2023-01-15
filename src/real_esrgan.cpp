@@ -1,7 +1,18 @@
 #include "functions.h"
 #include "ncnn.h"
 
+std::mutex lock_models;
 std::pair<cv::Mat, ErrorMsg> inference(const cv::Mat image, const ncnn::Net* model);
+std::map<std::string, ncnn::Net*> models = {};
+
+void delete_models() {
+
+	std::lock_guard<std::mutex> guard_model(lock_models);
+	for (auto itr = models.begin(); itr != models.end(); ++itr) {
+		delete itr->second;
+	}
+	models.clear();
+}
 
 cv::Mat to_ocv(const ncnn::Mat& result) {
 
@@ -21,6 +32,7 @@ cv::Mat to_ocv(const ncnn::Mat& result) {
 
 ErrorMsg real_esrgan(ARGB* image, const int& width, const int& height, const RectArea& extend, const std::string& modelpath_noext, const bool& x2resize) {
 
+	std::lock_guard<std::mutex> guard_model(lock_models);
 	auto scale = x2resize ? 2 : 4;
 	if (width != scale * (width - (extend.left + extend.right)) || height != scale * (height - (extend.top + extend.bottom))) {
 		return "invalid size: " + std::format("{}x{} > {}x{}", 
@@ -33,15 +45,14 @@ ErrorMsg real_esrgan(ARGB* image, const int& width, const int& height, const Rec
 	auto origin_alpha = just_alpha_to_cvmat(image, width, height, extend);
 
 	// load model
-	static std::map<std::string, std::shared_ptr<ncnn::Net>> models = {};
-	std::shared_ptr<ncnn::Net> net;
+	ncnn::Net *net;
 	if (models.contains(modelpath_noext)) {
 		net = models[modelpath_noext];
 	}
 	else {
 		// load model
 
-		net = std::make_shared<ncnn::Net>();
+		net = new ncnn::Net;
 		net->opt.use_vulkan_compute = true;
 		net->set_vulkan_device(ncnn::get_default_gpu_index());
 		net->opt.use_fp16_packed = false;
@@ -79,11 +90,11 @@ ErrorMsg real_esrgan(ARGB* image, const int& width, const int& height, const Rec
 	}
 
 	// inference
-	auto result_color = inference(origin_color, net.get());
+	auto result_color = inference(origin_color, net);
 	if (result_color.second != "") {
 		return result_color.second;
 	}
-	auto result_alpha = inference(origin_alpha, net.get());
+	auto result_alpha = inference(origin_alpha, net);
 	if (result_color.second != "") {
 		return result_color.second;
 	}
