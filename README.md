@@ -6,7 +6,28 @@
 
 Releasesから `kasaibox.zip` をダウンロードして以下のルールに従って配置してください．
 - `dependencies` フォルダ内のファイル（opencv_worldXXX.dllなど）を **aviutl.exeがあるフォルダに** 
-- それ以外の `@かさいボックス.anm`, `@かさいボックス.obj`, `@かさいボックス.tra`，`kasaibox.dll` を **`scripts` フォルダ以下に**
+- それ以外の `@かさいボックス.anm`, `@かさいボックス.obj`, `@かさいボックス.tra`，`kasaibox.dll`，`models`フォルダ を **`scripts` フォルダ以下に**
+
+```
+(aviutl.exe folder)
+├ aviutl.exe
+├ ...
+├ dependenciesフォルダ内の.dllファイル
+├ (opencv_world460.dll, ncnn.dllなど)
+├ scripts
+│ ├ ...
+│ ├ (任意のディレクトリ)
+│ │ ├ @かさいボックス.anm
+│ │ ├ @かさいボックス.tra
+│ │ ├ @かさいボックス.obj
+│ │ ├ kasaibox.dll
+│ │ └ models
+│ │ 　 ├ RealESRGANv2-animevideo-xsx4.bin
+│ │ 　 ├ RealESRGANv2-animevideo-xsx4.param
+│ │ 　 └ ...
+│ └ ...
+└ ...
+```
 
 ## スクリプト一覧
 
