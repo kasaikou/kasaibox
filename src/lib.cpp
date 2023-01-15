@@ -83,10 +83,11 @@ BOOL WINAPI DllMain(HINSTANCE hInstDll, DWORD fdwReason, LPVOID lpReserved) {
 		std::filesystem::path p(dllpath);
 		dlldirpath = p.parent_path().string();
 		SetDllDirectory(dlldirpath.data());
-		ncnn::create_gpu_instance();
+		// ncnn::create_gpu_instance();
 	}
 	else if (fdwReason == DLL_PROCESS_DETACH) {
-		ncnn::destroy_gpu_instance();
+		delete_models();
+		// ncnn::destroy_gpu_instance();
 	}
 
 	return TRUE;
