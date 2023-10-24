@@ -27,6 +27,22 @@ obj.rz = obj.rz + obj.track3
 obj.ox = res_ox + pos[1]
 obj.oy = res_oy + pos[2]
 
+@両端消失フェード
+--track0:始端消失,0,5,0.15,0.01
+--track1:終端消失,0,5,0.15,0.01
+--track2:始端フェード,0,5,0,0.01
+--track3:終端フェード,0,5,0,0.01
+
+local elapsedTime = obj.time
+local remainingTime = obj.totaltime - obj.time
+
+if elapsedTime < obj.track0 or remainingTime < obj.track1 then
+    obj.alpha = 0
+else 
+    local alpha = math.min(1, (elapsedTime - obj.track0) / (obj.track2 + 0.000001), (remainingTime - obj.track1) / (obj.track3 + 0.000001))
+    obj.alpha = obj.alpha * alpha
+end     
+
 @testing_Real-ESRGAN
 --track0:scale,1,4,2,0.01
 --dialog:使用モデル,modelname="RealESRGANv2-animevideo-xsx4";
