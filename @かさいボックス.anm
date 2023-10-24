@@ -122,3 +122,20 @@ require("kasaibox")
 data, w, h = obj.getpixeldata()
 kasaibox.opencv_binalize(data, w, h)
 obj.putpixeldata(data)
+
+@四隅
+--track0:四隅高,0,1000,200,1
+--track1:四隅幅,0,1000,200,1
+--track2:回転,-360,360,0.01
+--track3:ぼかし,0,1000,0,1
+--dialog:中心X,cx=0;中心Y,cy=0;help,help="https://github.com/streamwest-1629/kasaibox";
+
+local clip_height = obj.h - (obj.track0 * 2)
+local clip_width = obj.w - (obj.track1 * 2)
+
+if clip_height > 0 then
+    obj.effect("斜めクリッピング","中心X", cx, "中心Y", cy, "角度", 0+obj.track2, "ぼかし", obj.track3, "幅", -clip_height)
+end
+if clip_width > 0 then
+    obj.effect("斜めクリッピング","中心X", cx, "中心Y", cy, "角度", 90+obj.track2, "ぼかし", obj.track3, "幅", -clip_width)
+end
